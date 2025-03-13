@@ -78,12 +78,18 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator*(const Column_Major_Matrix<T>&
     int cols = cm.all_column.size();
     Row_Major_Matrix<T> result(rows, cols);
 
+    //check input
+    if(common == 0 || cm.all_column.empty() || all_row.empty() || cm.all_column[0].empty())
+        throw std::runtime_error("Empty matrix");
+    if(common != cm.all_column[0].size())
+        throw std::runtime_error("Dimension mismatch for multiplication");
+
     auto start_time = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < rows; ++i)
         for (int j = 0; j < cols; ++j) {
             T sum = 0;
             for (int k = 0; k < common; ++k)
-                sum += all_row[i][k] * cm.all_column[j][k];
+                sum += all_row[i][k] * cm.all_column[j][k]; // notice: cm.all_column[j][k] instead of cm.all_column[k][j] in Column_Major_Matrix
             result.all_row[i][j] = sum;
         }
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -99,6 +105,12 @@ Row_Major_Matrix<T> Row_Major_Matrix<T>::operator%(const Column_Major_Matrix<T>&
     int common = (rows > 0 ? all_row[0].size() : 0);
     int cols = cm.all_column.size();
     Row_Major_Matrix<T> result(rows, cols);
+
+    //check input
+    if(common == 0 || cm.all_column.empty() || all_row.empty() || cm.all_column[0].empty())
+        throw std::runtime_error("Empty matrix");
+    if(common != cm.all_column[0].size())
+        throw std::runtime_error("Dimension mismatch for multiplication");
 
     auto multiply_range = [&](int start, int end) {
         for (int i = start; i < end; ++i) {
@@ -256,7 +268,7 @@ Column_Major_Matrix<T> Column_Major_Matrix<T>::operator%(const Row_Major_Matrix<
     Column_Major_Matrix<T> result(A_rows, B_cols);
 
     auto multiply_range = [&](int start, int end) {
-        // 英文: partition by rows of the result matrix
+        // partition by rows of the result matrix
         for (int i = start; i < end; ++i) {
             for (int j = 0; j < B_cols; ++j) {
                 T sum = 0;
@@ -286,7 +298,7 @@ Column_Major_Matrix<T> Column_Major_Matrix<T>::operator%(const Row_Major_Matrix<
     return result;
 }
 
-// Type Conversion：Column_Major_Matrix  converted to Row_Major_Matrix
+// Type Conversion：Column_Major_Matrix to Row_Major_Matrix
 template <typename T>
 Column_Major_Matrix<T>::operator Row_Major_Matrix<T>() const {
     if (all_column.empty()) return Row_Major_Matrix<T>(0, 0);
