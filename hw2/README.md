@@ -10,7 +10,7 @@ This project implements the Smith-Waterman algorithm for local sequence alignmen
 Both versions are benchmarked, and a simplified BLAST-like alignment output is generated for comparison. The speedup of the SIMD version over the scalar version is also reported.
 
 
-## 📁 File Structure
+##  File Structure
 
 ```
 .
@@ -25,9 +25,9 @@ Both versions are benchmarked, and a simplified BLAST-like alignment output is g
 ```
 
 
-## ⚙️ Build Instructions
+##  Build Instructions
 
-### ✅ Requirements
+### Requirements
 
 - C++17 or later
 - [XSIMD](https://github.com/xtensor-stack/xsimd) header-only library
@@ -39,7 +39,7 @@ git clone https://github.com/xtensor-stack/xsimd.git
 
 Update the `XSIMD_INCLUDE` path in the `Makefile` if necessary.
 
-### 🔧 Build
+### Build
 
 To compile the project:
 ```bash
@@ -72,7 +72,7 @@ You can also run the test using:
 make test
 ```
 
-## 📤 Output Format
+## Output Format
 
 After running, you will see:
 
