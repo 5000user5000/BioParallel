@@ -3,13 +3,30 @@
 #include <iostream>
 #include <chrono>
 #include "align_sw_simd.hpp"
+#include <string>
 
-void print_alignment(const AlignmentResult& result) {
-    std::cout << "Score: " << result.score << "\n";
-    std::cout << "Seq1: " << result.start1 << "    " << result.aligned_seq1 << "    " << result.end1 << "\n";
-    std::cout << "      " << "      " << result.match_line << "\n";
-    std::cout << "Seq2: " << result.start2 << "    " << result.aligned_seq2 << "    " << result.end2 << "\n";
+void print_alignment(const AlignmentResult& result, size_t width = 60) {
+    std::cout << "Score: " << result.score << "\n\n";
+
+    const std::string& seq1 = result.aligned_seq1;
+    const std::string& seq2 = result.aligned_seq2;
+    const std::string& match = result.match_line;
+
+    size_t len = seq1.size();
+    for (size_t i = 0; i < len; i += width) {
+        size_t chunk_len = std::min(width, len - i);
+
+        std::string chunk1 = seq1.substr(i, chunk_len);
+        std::string chunk2 = seq2.substr(i, chunk_len);
+        std::string chunkm = match.substr(i, chunk_len);
+
+        // Print with perfect vertical alignment
+        std::cout << "Seq1:    " << chunk1 << "\n";
+        std::cout << "         " << chunkm << "\n";
+        std::cout << "Seq2:    " << chunk2 << "\n\n";
+    }
 }
+
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
