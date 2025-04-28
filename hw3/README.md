@@ -1,14 +1,15 @@
-# HW02 - Smith-Waterman Sequence Alignment with XSIMD Acceleration
+# HW03 - Smith-Waterman Sequence Alignment with CUDA Acceleration
 
 ##  Overview
 
 This project implements the Smith-Waterman algorithm for local sequence alignment in C++, including:
 
 - A **scalar (non-SIMD)** version
-- An **SIMD-accelerated version using [XSIMD](https://github.com/xtensor-stack/xsimd)**
+- A **SIMD-accelerated** version using XSIMD
+- A **CUDA-accelerated** version for GPU computation
 
-Both versions are benchmarked, and a simplified BLAST-like alignment output is generated for comparison. The speedup of the SIMD version over the scalar version is also reported.
-
+All versions are benchmarked, and a simplified BLAST-like alignment output is generated for comparison.  
+Speedups of the SIMD and CUDA versions over the scalar version are reported.
 
 ##  File Structure
 
@@ -18,6 +19,7 @@ Both versions are benchmarked, and a simplified BLAST-like alignment output is g
 ├── main.cpp                 # Main program logic
 ├── align_sw.hpp / .cpp      # Scalar Smith-Waterman implementation
 ├── align_sw_simd.hpp / .cpp # SIMD Smith-Waterman using XSIMD
+├── align_sw_cuda.hpp / .cu  # CUDA Smith-Waterman implementation 
 ├── fasta_parser.hpp / .cpp  # FASTA file parser
 ├── seq1.fasta               # Sample input sequence 1
 ├── seq2.fasta               # Sample input sequence 2
@@ -78,17 +80,42 @@ After running, you will see:
 
 - **Alignment score**
 - **Simplified BLAST-like alignment display**
-- **Reported speedup (SIMD vs scalar)**
+- **Reported speedups**:
+    - SIMD vs Scalar
+    - CUDA vs Scalar
+    - CUDA vs SIMD
 
 Example output:
 
 ```
-Score: 78
-Seq1:  453    CCAATGCCACAAAACATCTGTCTCTAACTGGTG--TGTGTGT    492
-              |||  ||| ||||  |||||| | ||| |||||  |*|||||
-Seq2:   17    CCA--GCC-CAAA--ATCTGT-TTTAA-TGGTGGATTTGTGT    51
+Scalar Alignment:
+optimal_alignment_score: 42
 
-Speedup: 2.3X
+Seq1:    0  CCAATGCCACAAAACATCTGTCTCTAACTGGT-G-TGTGTGT    40
+            || | ||| | ||| |||||| |*||| |||| | |*|||||
+Seq2:    0  CC-A-GCC-C-AAA-ATCTGT-TTTAA-TGGTGGATTTGTGT    35
+
+
+SIMD Alignment:
+optimal_alignment_score: 42
+
+Seq1:    0  CCAATGCCACAAAACATCTGTCTCTAACTGGT-G-TGTGTGT    40
+            || | ||| | ||| |||||| |*||| |||| | |*|||||
+Seq2:    0  CC-A-GCC-C-AAA-ATCTGT-TTTAA-TGGTGGATTTGTGT    35
+
+
+SIMD Speedup (vs Scalar): 1.13725X
+
+CUDA Alignment:
+optimal_alignment_score: 42
+
+Seq1:    0  CCAATGCCACAAAACATCTGTCTCTAACTGGT-G-TGTGTGT    40
+            || | ||| | ||| |||||| |*||| |||| | |*|||||
+Seq2:    0  CC-A-GCC-C-AAA-ATCTGT-TTTAA-TGGTGGATTTGTGT    35
+
+
+CUDA Speedup (vs Scalar): 0.000208848X
+CUDA Speedup (vs SIMD): 0.000183643X
 ```
 
 Legend:
@@ -100,6 +127,7 @@ Legend:
 ##  Notes
 
 - The SIMD implementation only accelerates the scoring matrix computation; traceback is reused from the scalar implementation for correctness and simplicity.
+- The CUDA implementation computes the scoring matrix on the GPU using a wavefront parallelization strategy to respect data dependencies.
 - The program assumes that FASTA sequences are single-line and contain no line breaks (per assignment instructions).
 - You can tune match/mismatch/gap scores by editing the function arguments in `main.cpp`.
 
@@ -107,8 +135,9 @@ Legend:
 
 ##  Author
 
-This project was completed as part of **Homework 2** for the course on bioinformatics/systems programming.
+This project was completed as part of **Homework 3** for the course on bioinformatics/systems programming.
 
 If you encounter issues running the code, please check:
 - That XSIMD is correctly included in the build path
+- That your CUDA Toolkit is properly installed and available
 - That your sequences are valid and in FASTA format

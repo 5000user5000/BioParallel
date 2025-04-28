@@ -1,10 +1,12 @@
 #include "fasta_parser.hpp"
 #include "align_sw.hpp"
+#include "align_sw_simd.hpp"
+#include "align_sw_cuda.hpp" 
 #include <iostream>
 #include <chrono>
-#include "align_sw_simd.hpp"
 #include <string>
 #include <iomanip>
+#include <sstream>
 
 void print_alignment(const AlignmentResult& result, size_t width = 60) {
     std::cout << "optimal_alignment_score: " << result.score << "\n\n";
@@ -27,26 +29,21 @@ void print_alignment(const AlignmentResult& result, size_t width = 60) {
         size_t chunk_start1 = idx1;
         size_t chunk_start2 = idx2;
 
-        // 計算 chunk 結束 index（不計 '-')
         for (char c : chunk1) if (c != '-') ++idx1;
         for (char c : chunk2) if (c != '-') ++idx2;
 
         size_t chunk_end1 = idx1;
         size_t chunk_end2 = idx2;
 
-        // 計算 match_line 所需的前綴空白：和 Seq1 label 長度一致 + index + 2 個空格
         std::stringstream padding;
         padding << "Seq1: " << std::setw(4) << chunk_start1 << "  ";
         std::string match_prefix(padding.str().length(), ' ');
 
-        // 輸出
         std::cout << "Seq1: " << std::setw(4) << chunk_start1 << "  " << chunk1 << "  " << std::setw(4) << chunk_end1 << "\n";
         std::cout << match_prefix << chunkm << "\n";
         std::cout << "Seq2: " << std::setw(4) << chunk_start2 << "  " << chunk2 << "  " << std::setw(4) << chunk_end2 << "\n\n";
     }
 }
-
-
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -54,19 +51,19 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 讀取 FASTA 檔案
     std::string seq1 = read_fasta_sequence(argv[1]);
     std::string seq2 = read_fasta_sequence(argv[2]);
 
-    // 計時非SIMD版本
+    // 標準 Scalar 計時
     auto start = std::chrono::high_resolution_clock::now();
     AlignmentResult result_scalar = smith_waterman(seq1, seq2);
     auto end = std::chrono::high_resolution_clock::now();
     double time_scalar = std::chrono::duration<double>(end - start).count();
 
+    std::cout << "\nScalar Alignment:\n";
     print_alignment(result_scalar);
 
-    // XSIMD 對齊時間
+    // SIMD 計時
     auto start_simd = std::chrono::high_resolution_clock::now();
     AlignmentResult result_simd = smith_waterman_simd(seq1, seq2);
     auto end_simd = std::chrono::high_resolution_clock::now();
@@ -75,7 +72,19 @@ int main(int argc, char* argv[]) {
     std::cout << "\nSIMD Alignment:\n";
     print_alignment(result_simd);
 
-    std::cout << "\nSpeedup: " << (time_scalar / time_simd) << "X\n";
+    std::cout << "\nSIMD Speedup (vs Scalar): " << (time_scalar / time_simd) << "X\n";
+
+    // CUDA 計時
+    auto start_cuda = std::chrono::high_resolution_clock::now();
+    AlignmentResult result_cuda = smith_waterman_cuda(seq1, seq2);
+    auto end_cuda = std::chrono::high_resolution_clock::now();
+    double time_cuda = std::chrono::duration<double>(end_cuda - start_cuda).count();
+
+    std::cout << "\nCUDA Alignment:\n";
+    print_alignment(result_cuda);
+
+    std::cout << "\nCUDA Speedup (vs Scalar): " << (time_scalar / time_cuda) << "X\n";
+    std::cout << "CUDA Speedup (vs SIMD): " << (time_simd / time_cuda) << "X\n";
 
     return 0;
 }
